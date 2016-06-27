@@ -2,21 +2,27 @@
 import nltk
 import Manipulador
 
-base_arq = Manipulador.busca_base("teste.csv")
-
 stemmer = nltk.stem.RSLPStemmer()
-frases = []
 stop_words = Manipulador.get_stopwords()
+base_treino = Manipulador.busca_base("treino.csv")
+base_teste = Manipulador.busca_base("teste.csv")
+
 
 print ("processando arquivo...")
 
-for (palavras, sentimento) in base_arq:
-    #print palavras
-    filtrado = [str(stemmer.stem(Manipulador.remover_acentos(e))) for e in palavras.split() if e not in stop_words]
-    #print filtrado
-    frases.append((filtrado, sentimento))
 
-palavras = Manipulador.busca_palavras_frases(frases)
+def filtrar_frases(base):
+    frases_base = []
+    for (palavras, sentimento) in base:
+        filtrado = [str(stemmer.stem(Manipulador.remover_acentos(e))) for e in palavras.split() if e not in stop_words]
+        frases_base.append((filtrado, sentimento))
+    return frases_base
+
+
+#frases = []
+frases_treino = filtrar_frases(base_treino)
+
+palavras = Manipulador.busca_palavras_frases(frases_treino)
 
 frequencia = Manipulador.busca_frequencia_palavras(nltk, palavras)
 
@@ -30,31 +36,26 @@ def extrator_caracteristicas(documento):
         caracteristicas['contem(%s)' % palavra] = (palavra in doc)
     return caracteristicas
 
-#caracteristicas_frase = extrator_caracteristicas(['tim','gole','nov'])
-#print(caracteristicas_frase)
-
 print ("treinando algorítimo...")
-treino = nltk.apply_features(extrator_caracteristicas, frases)
+treino = nltk.apply_features(extrator_caracteristicas, frases_treino)
 
 classificador = nltk.NaiveBayesClassifier.train(treino)
 
-#frases para teste.
-
-	#negativo
-#teste = '@submarino Vocês protegem um fraudador!!! #Vergonha http://t.co/dR3hgnFh'
-#teste = 'a rede globo é uma bosta'
-	#positivo
-teste = 'Olha! Tenho o videobit 62 do videoalbum Claudia Leitte #IssoVaiColar'
-#teste = 'o programa panico me segue'
-
-
 print ("Classificando...")
 
+teste = filtrar_frases(base_teste)
 teste_steemming = []
-for (palavras) in teste.split():
-    filtrado = [e for e in palavras.split()]
-    teste_steemming.append(str(stemmer.stem(Manipulador.remover_acentos(filtrado[0]))))
 
+#arrumar aqui nos laços.
+for linha in teste:
+    for palavras in linha:
+        teste_steemming.append((stemmer.stem(Manipulador.remover_acentos(palavras[0])), '0'))
+
+for linha_classificador in teste_steemming:
+    teste_steemming[1] = classificador.classify(extrator_caracteristicas(linha_classificador[0]))
+
+for linha_classificador in teste_steemming:
+    print classificador.classify(extrator_caracteristicas(linha_classificador[0])) + "valor: " + linha_classificador[0]
 
 if classificador.classify(extrator_caracteristicas(teste_steemming)) == '1':
     print ("Twit Positivo")
@@ -70,3 +71,16 @@ else:
 
 #print classificador.classify(extrator_caracteristicas(teste_steemming))
 #print classificador.show_most_informative_features(5)
+
+
+#teste = 'perdi dinheiro na aposta'
+#teste = 'estou com muita dor nos meu dedos de frio'
+
+#frases para teste.
+
+#negativo
+#teste = '@submarino Vocês protegem um fraudador!!! #Vergonha http://t.co/dR3hgnFh'
+#teste = 'a rede globo é uma bosta'
+#positivo
+#teste = 'Olha! Tenho o videobit 62 do videoalbum Claudia Leitte #IssoVaiColar'
+#teste = 'o programa panico me segue'
