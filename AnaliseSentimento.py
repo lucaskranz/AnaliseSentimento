@@ -4,12 +4,10 @@ import Manipulador
 
 stemmer = nltk.stem.RSLPStemmer()
 stop_words = Manipulador.get_stopwords()
-base_treino = Manipulador.busca_base("treino.csv")
-base_teste = Manipulador.busca_base("teste.csv")
-
+base_treino = Manipulador.busca_base("sementes_treinamento.csv")
+base_teste = Manipulador.busca_base("sementes_treinamento.csv")
 
 print ("processando arquivo...")
-
 
 def filtrar_frases(base):
     frases_base = []
@@ -18,8 +16,6 @@ def filtrar_frases(base):
         frases_base.append((filtrado, sentimento))
     return frases_base
 
-
-#frases = []
 frases_treino = filtrar_frases(base_treino)
 
 palavras = Manipulador.busca_palavras_frases(frases_treino)
@@ -36,51 +32,62 @@ def extrator_caracteristicas(documento):
         caracteristicas['contem(%s)' % palavra] = (palavra in doc)
     return caracteristicas
 
-print ("treinando algorítimo...")
+print ("treinando algoritmo...")
 treino = nltk.apply_features(extrator_caracteristicas, frases_treino)
 
 classificador = nltk.NaiveBayesClassifier.train(treino)
+print ("Classificando...\n")
 
-print ("Classificando...")
-
-teste = filtrar_frases(base_teste)
 teste_steemming = []
+base_resultado = []
+verdadeiroPositivos = 0.0
+verdadeiroNegativos = 0.0
+falsoPositivos = 0.0
+falsoNegativos = 0.0
+f1 = 0.0
 
-#arrumar aqui nos laços.
-for linha in teste:
-    for palavras in linha:
-        teste_steemming.append((stemmer.stem(Manipulador.remover_acentos(palavras[0])), '0'))
-
-for linha_classificador in teste_steemming:
-    teste_steemming[1] = classificador.classify(extrator_caracteristicas(linha_classificador[0]))
-
-for linha_classificador in teste_steemming:
-    print classificador.classify(extrator_caracteristicas(linha_classificador[0])) + "valor: " + linha_classificador[0]
-
-if classificador.classify(extrator_caracteristicas(teste_steemming)) == '1':
-    print ("Twit Positivo")
-else:
-    print ("Twit Negativo")
-
-#--------------------------------------------
-#buscar a precisão/revocação/F1
-#nltk.precision()
-
-
-#--------------------------------------------
-
-#print classificador.classify(extrator_caracteristicas(teste_steemming))
-#print classificador.show_most_informative_features(5)
+for (texto,sentimento) in base_teste:
+    for palavras in texto.split():
+        filtrado = [e for e in palavras.split()]
+        #teste_steemming.append(str(stemmer.stem(Manipulador.remover_acentos(filtrado[0]))))
+        teste_steemming.append(str(stemmer.stem(Manipulador.remover_acentos(e))) for e in palavras.split() if e not in stop_words)
+    sent = classificador.classify(extrator_caracteristicas(teste_steemming))
+    if sent == '1' and sent == sentimento:
+        verdadeiroPositivos += 1.0
+    if sent == '-1' and sent == sentimento:
+        verdadeiroNegativos += 1.0
+    if sent == '1' and sent != sentimento:
+        falsoPositivos += 1.0
+    if sent == '-1' and sent != sentimento:
+        falsoNegativos += 1.0
 
 
-#teste = 'perdi dinheiro na aposta'
-#teste = 'estou com muita dor nos meu dedos de frio'
+    # if sent == '1':
+    #     if
+    # sent == sentimento:
+    # verdadeiroPositivos += 1.0
+    # else:
+    # falsoNegativos += 1.0
+    # else:
+    # if sent == sentimento:
+    #     verdadeiroNegativos += 1.0
+    # else:
+    #     falsoPositivos += 1.0
 
-#frases para teste.
+print ("verdadeiroPositivos: " + str(verdadeiroPositivos))
+print ("falsoNegativos: " + str(falsoNegativos))
+print ("verdadeiroNegativos: " + str(verdadeiroNegativos))
+print ("falsoPositivos: " + str(falsoPositivos))
 
-#negativo
-#teste = '@submarino Vocês protegem um fraudador!!! #Vergonha http://t.co/dR3hgnFh'
-#teste = 'a rede globo é uma bosta'
-#positivo
-#teste = 'Olha! Tenho o videobit 62 do videoalbum Claudia Leitte #IssoVaiColar'
-#teste = 'o programa panico me segue'
+precisao = (verdadeiroPositivos)/(verdadeiroPositivos+falsoPositivos)
+revocacao = (verdadeiroPositivos)/(verdadeiroPositivos+falsoNegativos)
+f1 = (((2 * precisao * revocacao) / (precisao + revocacao)) * 100)
+
+#Precisão = (VP)/(VP+FP)
+print ("Precisão: " + str(precisao))
+
+#Revocação = (VP)/(VP+FN)
+print ("Revocação: " + str(revocacao))
+
+#F1
+print ("F1: " + str(f1))

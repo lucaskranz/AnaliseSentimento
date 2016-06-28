@@ -20,7 +20,6 @@ def remover_acentos(txt, codif='utf-8'):
 # concatena caracteres especiais com as stop words
 def get_stopwords(idioma = 'portuguese'):
     stop_words_portuges = stopwords.words(idioma)
-    #stop_words_portuges[1:0] = (['.', ',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{', '}'])
     return stop_words_portuges
 
 
@@ -42,12 +41,13 @@ def busca_palavras_unicas(lista_frequencia):
 
 
 def busca_base(nome_arquivo):
-    arquivo = csv.reader(open("teste.csv"))
+    arquivo = csv.reader(open(nome_arquivo))
     base = []
-
+    a = 1
     for row in arquivo:
         if (row[5] != "texto"):
             base.append((row[5], row[6]))
+        a=a+1
     return base
 
 
