@@ -4,7 +4,7 @@ import Manipulador
 
 stemmer = nltk.stem.RSLPStemmer()
 stop_words = Manipulador.get_stopwords()
-base_treino = Manipulador.busca_base("sementes_treinamento.csv")
+base_treino = Manipulador.busca_base("teste.csv")
 base_teste = Manipulador.busca_base("sementes_treinamento.csv")
 
 print ("processando arquivo...")
@@ -36,10 +36,10 @@ print ("treinando algoritmo...")
 treino = nltk.apply_features(extrator_caracteristicas, frases_treino)
 
 classificador = nltk.NaiveBayesClassifier.train(treino)
+
 print ("Classificando...\n")
 
 teste_steemming = []
-base_resultado = []
 verdadeiroPositivos = 0.0
 verdadeiroNegativos = 0.0
 falsoPositivos = 0.0
@@ -49,45 +49,42 @@ f1 = 0.0
 for (texto,sentimento) in base_teste:
     for palavras in texto.split():
         filtrado = [e for e in palavras.split()]
-        #teste_steemming.append(str(stemmer.stem(Manipulador.remover_acentos(filtrado[0]))))
-        teste_steemming.append(str(stemmer.stem(Manipulador.remover_acentos(e))) for e in palavras.split() if e not in stop_words)
+        teste_steemming.append(str(stemmer.stem(Manipulador.remover_acentos(filtrado[0]))))
     sent = classificador.classify(extrator_caracteristicas(teste_steemming))
-    if sent == '1' and sent == sentimento:
+    if (sent == '1') and (sentimento == sent):
         verdadeiroPositivos += 1.0
-    if sent == '-1' and sent == sentimento:
+    elif (sent == '-1') and (sentimento == sent):
         verdadeiroNegativos += 1.0
-    if sent == '1' and sent != sentimento:
+    elif (sent == '1') and (sentimento != sent):
         falsoPositivos += 1.0
-    if sent == '-1' and sent != sentimento:
+    elif (sent == '-1') and (sentimento != sent):
         falsoNegativos += 1.0
 
 
-    # if sent == '1':
-    #     if
-    # sent == sentimento:
-    # verdadeiroPositivos += 1.0
-    # else:
-    # falsoNegativos += 1.0
-    # else:
-    # if sent == sentimento:
-    #     verdadeiroNegativos += 1.0
-    # else:
-    #     falsoPositivos += 1.0
+# print ("verdadeiroPositivos: " + str(verdadeiroPositivos))
+# print ("falsoNegativos: " + str(falsoNegativos))
+# print ("verdadeiroNegativos: " + str(verdadeiroNegativos))
+# print ("falsoPositivos: " + str(falsoPositivos))
+precisao = 0.0
+revocacao = 0.0
 
-print ("verdadeiroPositivos: " + str(verdadeiroPositivos))
-print ("falsoNegativos: " + str(falsoNegativos))
-print ("verdadeiroNegativos: " + str(verdadeiroNegativos))
-print ("falsoPositivos: " + str(falsoPositivos))
-
-precisao = (verdadeiroPositivos)/(verdadeiroPositivos+falsoPositivos)
-revocacao = (verdadeiroPositivos)/(verdadeiroPositivos+falsoNegativos)
-f1 = (((2 * precisao * revocacao) / (precisao + revocacao)) * 100)
 
 #Precisão = (VP)/(VP+FP)
-print ("Precisão: " + str(precisao))
+if verdadeiroPositivos + falsoPositivos > 0:
+    precisao = (verdadeiroPositivos) / (verdadeiroPositivos + falsoPositivos)
+    print ("Precisão: " + str(precisao * 100))
 
 #Revocação = (VP)/(VP+FN)
-print ("Revocação: " + str(revocacao))
+if verdadeiroPositivos + falsoNegativos > 0:
+    revocacao = (verdadeiroPositivos) / (verdadeiroPositivos + falsoNegativos)
+    print ("Revocação: " + str(revocacao * 100))
 
-#F1
+if precisao + revocacao > 0:
+    f1 = (((2 * precisao * revocacao) / (precisao + revocacao)) * 100)
+
+#Acurácia = (VP+VN)/total
+acuracia = (verdadeiroPositivos + verdadeiroNegativos) / len(base_teste)
+print ("Acurácia: " + str(acuracia * 100))
+
 print ("F1: " + str(f1))
+
