@@ -23,6 +23,8 @@ def get_stopwords(idioma = 'portuguese'):
     return stop_words_portuges
 
 
+#Remove os radicais repetidos e coloca as palavras em uma lista ordenada
+#  pela frequência que as mesmas aparecem nas frases.
 def busca_palavras_frases(frases):
     todas_palavras = []
     for (palavras,sentimento) in frases:
@@ -30,27 +32,25 @@ def busca_palavras_frases(frases):
     return todas_palavras
 
 
+
+#Extrai a distribuição de frequência de cada radical dentro da lista.
 def busca_frequencia_palavras(nltk, lista_palavras):
     lista_palavras = nltk.FreqDist(lista_palavras)
     return lista_palavras
 
 
+#Palavras únicas.
 def busca_palavras_unicas(lista_frequencia):
     frequencia = lista_frequencia.keys()
     return frequencia
 
 
+#Lê o arquivo e remove a  a primeira linha se a mesma for um cabeçalho.
 def busca_base(nome_arquivo):
     arquivo = csv.reader(open(nome_arquivo))
     base = []
-    a = 1
     for row in arquivo:
         if (row[5] != "texto"):
             base.append((row[5], row[6]))
-        a=a+1
     return base
-
-
-
-
 
